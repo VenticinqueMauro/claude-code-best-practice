@@ -4,6 +4,42 @@
 
 [![Fork Status](https://img.shields.io/badge/fork-upstream%20synced-green)](https://github.com/shanraisshan/claude-code-best-practice)
 
+## 🎯 Dos Niveles de Complejidad
+
+Este repositorio ofrece **dos enfoques**:
+
+1. **🚀 Setup Simplificado** - Instalación rápida con `install.sh`, ideal para comenzar
+2. **🔬 Contenido Avanzado** - Workflows extendidos, skills y 10+ reportes técnicos del upstream
+
+Elegí el nivel que necesites según tu proyecto.
+
+---
+
+## 📦 Contenido
+
+### Setup Simplificado (Listo para Instalar)
+- `install.sh` - Script de instalación automatizado
+- `global-settings.json` - Configuración global preconfigurada
+- `project-settings.json` - Settings de proyecto
+- `project-CLAUDE.md` - Plantilla para tus proyectos
+- `commands/rpi/` - Comandos Research → Plan → Implement
+- `rules/` - 5 reglas de código (vibe-coding, commits, nextjs, etc)
+
+### Contenido Avanzado (Referencias del Upstream)
+- `reports/` - 10 reportes técnicos sobre Claude Code
+  - Settings detallados
+  - CLI flags y comandos
+  - SDK vs CLI comparisons
+  - Tips de Boris Cherny (creador)
+  - Hooks, MCP servers y más
+- `workflow/rpi/` - RPI expandido con 8 agentes especializados
+- `.claude/skills/` - Skills avanzados (agent-browser, vibe-to-agentic, etc)
+- `CLAUDE-upstream-reference.md` - Ejemplo de CLAUDE.md del upstream
+
+Lee [INTEGRATION-NOTES.md](./INTEGRATION-NOTES.md) para entender cuándo usar cada nivel.
+
+---
+
 ## Estructura de archivos a crear
 
 ```
@@ -93,5 +129,69 @@ git push origin master
 - Cada 2-4 semanas si el upstream está activo
 - Cuando veas features interesantes en el repo original
 
-**Nota**: Este fork agrega mejoras específicas que no están en el upstream (instalador, español, scripts), así que algunas configuraciones pueden divergir intencionalmente.
+**Nota**: Este fork NO hace merge automático del upstream. Integramos selectivamente las mejoras más valiosas manteniendo la simplicidad del instalador.
+
+---
+
+## 📚 Contenido Avanzado
+
+### Reportes Técnicos (`reports/`)
+
+Documentación profunda sobre Claude Code (traída del upstream):
+
+- `claude-settings.md` - Guía completa de todas las configuraciones
+- `claude-commands.md` - Todos los comandos disponibles
+- `claude-cli-startup-flags.md` - Flags de inicio del CLI
+- `claude-global-vs-project-settings.md` - Diferencias entre configs
+- `claude-boris-tips-feb-26.md` - Tips del creador Boris Cherny
+- `claude-agent-memory.md` - Sistema de memoria de agentes
+- `claude-agent-sdk-vs-cli-system-prompts.md` - Comparativa SDK vs CLI
+- Y más...
+
+### Workflow RPI Extendido (`workflow/rpi/`)
+
+Versión avanzada del flujo Research → Plan → Implement con:
+
+**8 Agentes Especializados**:
+- `requirement-parser` - Parsea y valida requerimientos
+- `product-manager` - Perspectiva de producto
+- `technical-cto-advisor` - Decisiones arquitectónicas
+- `ux-designer` - Experiencia de usuario
+- `senior-software-engineer` - Implementación
+- `code-reviewer` - Revisión de código
+- `constitutional-validator` - Validación de constraints
+- `documentation-analyst-writer` - Documentación
+
+**3 Comandos Mejorados**:
+- `research.md` - Investigación con validación constitucional
+- `plan.md` - Planificación detallada multi-agente
+- `implement.md` - Implementación con revisión automática
+
+### Skills Avanzados (`.claude/skills/`)
+
+- **agent-browser** - Navegación web automatizada con agentes
+- **vibe-to-agentic-framework** - Convierte workflows vibe a agentic
+- **weather-fetcher/transformer** - Ejemplo de arquitectura de microservicios
+
+### ¿Cuándo usar el contenido avanzado?
+
+**Usá el Setup Simplificado** para proyectos personales o equipos pequeños.
+
+**Usá el Contenido Avanzado** cuando:
+- Trabajás en equipos grandes con procesos estrictos
+- Necesitás compliance y validaciones específicas
+- Querés entender a fondo cómo funciona Claude Code
+- Tenés requerimientos enterprise complejos
+
+---
+
+## 🤝 Filosofía de este Fork
+
+**Upstream (shanraisshan)**: Repositorio de conocimiento y ejemplos de referencia
+**Este Fork**: Kit de instalación plug-and-play + referencias avanzadas opcionales
+
+Mantenemos ambos mundos:
+- ✅ Instalación rápida y simple por defecto
+- ✅ Contenido avanzado disponible cuando lo necesites
+- ✅ Actualizaciones selectivas del upstream
 ```
