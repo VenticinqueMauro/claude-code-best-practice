@@ -81,7 +81,7 @@ jobs:
 
           Co-Authored-By: Claude <noreply@anthropic.com>"
 
-            git push origin master
+            git push origin main
           fi
 
       - name: Create issue for manual review

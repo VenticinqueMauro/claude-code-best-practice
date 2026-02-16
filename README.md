@@ -139,7 +139,7 @@ git merge upstream/main
 git rebase upstream/main
 
 # 4. Push a tu fork
-git push origin master
+git push origin main
 ```
 
 ### ¿Cuándo sincronizar?
