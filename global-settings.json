@@ -1,0 +1,79 @@
+{
+  "model": "sonnet",
+  "language": "spanish",
+  "autoUpdatesChannel": "stable",
+  "cleanupPeriodDays": 30,
+
+  "permissions": {
+    "allow": [
+      "Edit(*)",
+      "Write(*)",
+      "Read(*)",
+      "Bash(npm run *)",
+      "Bash(npx *)",
+      "Bash(pnpm *)",
+      "Bash(yarn *)",
+      "Bash(node *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git status)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git branch *)",
+      "Bash(git checkout *)",
+      "Bash(git stash *)",
+      "Bash(cat *)",
+      "Bash(ls *)",
+      "Bash(find *)",
+      "Bash(grep *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(wc *)",
+      "Bash(mkdir *)",
+      "Bash(cp *)",
+      "Bash(mv *)",
+      "Bash(echo *)",
+      "Bash(tsc *)",
+      "Bash(eslint *)",
+      "Bash(prettier *)",
+      "WebFetch(domain:*)",
+      "WebSearch",
+      "mcp__*"
+    ],
+    "ask": [
+      "Bash(git push *)",
+      "Bash(git merge *)",
+      "Bash(git rebase *)",
+      "Bash(rm *)",
+      "Bash(docker *)",
+      "Bash(sudo *)"
+    ],
+    "deny": [
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(./secrets/**)"
+    ],
+    "defaultMode": "bypassPermissions"
+  },
+
+  "env": {
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "50",
+    "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1"
+  },
+
+  "statusLine": {
+    "type": "command",
+    "command": "echo \"$(git branch --show-current 2>/dev/null || echo '-') | ctx: $(claude --context-usage 2>/dev/null || echo '?')%\""
+  },
+
+  "showTurnDuration": true,
+  "spinnerTipsEnabled": true,
+  "terminalProgressBarEnabled": true,
+
+  "attribution": {
+    "commit": "Co-Authored-By: Claude <noreply@anthropic.com>",
+    "pr": ""
+  },
+
+  "enableAllProjectMcpServers": true
+}
