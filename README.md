@@ -94,21 +94,26 @@ echo ".claude/settings.local.json" >> .gitignore
 
 Este proyecto es un fork del repositorio original de shanraisshan. Tenés **3 formas** de sincronizar:
 
-### 🤖 Opción 1: Automatización con GitHub Actions (Recomendado)
+### 🤖 Opción 1: AUTO-INTEGRACIÓN COMPLETA (Recomendado) 🚀
 
-**Configuración de una sola vez:**
+**Sistema 100% automatizado - CERO intervención manual:**
 
-El fork incluye un workflow de GitHub Actions que:
-- ✅ **Revisa cambios semanalmente** (cada lunes)
-- ✅ **Analiza y categoriza** por nivel de riesgo
-- ✅ **Crea issues automáticos** con reportes detallados
-- ✅ **Opción de auto-integración** para cambios seguros (reportes, docs)
+El fork incluye **integración inteligente automática** que:
+- ✅ **Detecta cambios** semanalmente (cada lunes 9 AM UTC)
+- ✅ **Categoriza por riesgo** automáticamente (bajo/medio/alto)
+- ✅ **Integra automáticamente** cambios seguros a `main` (reportes, docs)
+- ✅ **Crea PRs automáticas** para cambios que requieren revisión
+- ✅ **Protege archivos críticos** (tu setup personalizado NUNCA se toca)
+- ✅ **Cierra issues** automáticamente con resumen completo
 
-**No requiere acción - funciona automáticamente después del primer push** 🎉
+**Tu acción requerida:** **CERO** ⚡
 
-**⚠️ Importante para forks**: Habilitar Issues en Settings → Features para recibir notificaciones automáticas.
+Cambios seguros se integran solos. Cambios medios van a PR (opcional revisar). Archivos críticos protegidos.
 
-Lee [AUTOMATION.md](./AUTOMATION.md) para detalles completos.
+**⚠️ Setup único**: Habilitar Issues en Settings → Features para notificaciones.
+
+📖 **Documentación completa:** [AUTO-INTEGRATION.md](./AUTO-INTEGRATION.md) - Explica TODO el sistema
+📚 **Detalles técnicos:** [AUTOMATION.md](./AUTOMATION.md) - Para entender cómo funciona
 
 **Ejecución manual desde GitHub:**
 1. Andá a: `Actions` → `Sync Upstream Changes`

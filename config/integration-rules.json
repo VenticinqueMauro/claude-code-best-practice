@@ -1,0 +1,89 @@
+{
+  "version": "1.0",
+  "description": "Reglas para integración automática segura desde upstream",
+
+  "auto_integrate": {
+    "description": "Paths que se integran automáticamente sin revisión (riesgo bajo)",
+    "paths": [
+      "reports/**/*.md",
+      "workflow/rpi/.claude/agents/*.md",
+      "workflow/rpi/.claude/commands/**/*.md",
+      "workflow/rpi/*.md",
+      "workflow/rpi/*.svg",
+      ".claude/skills/**/SKILL.md",
+      "CLAUDE-upstream-reference.md"
+    ],
+    "strategy": "direct_merge",
+    "notify": true
+  },
+
+  "auto_pr": {
+    "description": "Paths que crean PR automático para revisión (riesgo medio)",
+    "paths": [
+      ".claude/agents/*.md",
+      ".claude/commands/**/*.md",
+      ".claude/hooks/**/*",
+      ".claude/skills/**/*.{js,py,sh}",
+      "scripts/*.sh",
+      "weather-orchestration/**/*",
+      "presentation/**/*"
+    ],
+    "strategy": "pull_request",
+    "auto_merge": false,
+    "require_review": false,
+    "labels": ["upstream-sync", "needs-review"]
+  },
+
+  "protected": {
+    "description": "Paths que NUNCA se integran automáticamente (riesgo crítico)",
+    "paths": [
+      "install.sh",
+      "sync-upstream.sh",
+      "global-settings.json",
+      "project-settings.json",
+      "project-CLAUDE.md",
+      "commands/rpi/*.md",
+      "rules/*.md",
+      ".github/workflows/*.yml",
+      "config/**/*",
+      "README.md",
+      "AUTOMATION.md",
+      "INTEGRATION-NOTES.md",
+      ".gitignore",
+      "package.json",
+      "package-lock.json",
+      ".env*"
+    ],
+    "action": "manual_only",
+    "notify": true
+  },
+
+  "ignore": {
+    "description": "Paths que se ignoran completamente (no relevantes)",
+    "paths": [
+      "**/*.png",
+      "**/*.jpg",
+      "**/*.jpeg",
+      "**/*.gif",
+      "**/*.webp",
+      "**/*.svg",
+      "**/*.mp3",
+      "**/*.wav",
+      "**/node_modules/**",
+      "**/.DS_Store",
+      "**/Thumbs.db"
+    ]
+  },
+
+  "behavior": {
+    "create_issue_summary": true,
+    "close_issue_on_success": true,
+    "notify_on_protected": true,
+    "batch_commits": true,
+    "max_files_per_commit": 20,
+    "commit_prefix": {
+      "auto_integrate": "chore(upstream)",
+      "auto_pr": "feat(upstream)"
+    }
+  }
+}

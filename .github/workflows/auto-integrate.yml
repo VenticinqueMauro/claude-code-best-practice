@@ -1,0 +1,249 @@
+name: Auto-Integrate Upstream Changes
+
+on:
+  schedule:
+    # Corre todos los lunes a las 10 AM UTC (1 hora después del check)
+    - cron: '0 10 * * 1'
+  workflow_dispatch:  # Permite ejecución manual
+    inputs:
+      dry_run:
+        description: 'Dry run (no push changes)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+jobs:
+  auto-integrate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add upstream remote
+        run: |
+          git remote add upstream https://github.com/shanraisshan/claude-code-best-practice.git || true
+          git fetch upstream
+
+      - name: Check for changes
+        id: check
+        run: |
+          COMMITS_BEHIND=$(git rev-list --count HEAD..upstream/main)
+          echo "commits_behind=$COMMITS_BEHIND" >> $GITHUB_OUTPUT
+
+          if [ "$COMMITS_BEHIND" -eq 0 ]; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run smart integration
+        if: steps.check.outputs.has_changes == 'true'
+        id: integrate
+        run: |
+          bash scripts/smart-integrate.sh > /tmp/integration-log.txt 2>&1 || true
+
+          # Capturar output
+          cat /tmp/integration-log.txt
+
+          # Verificar si hay commits nuevos
+          if git log --oneline -1 | grep -q "chore(upstream)\|feat(upstream)"; then
+            echo "has_auto_commits=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_auto_commits=false" >> $GITHUB_OUTPUT
+          fi
+
+          # Verificar si hay branch de PR
+          if git branch -a | grep -q "upstream-sync-pr-"; then
+            PR_BRANCH=$(git branch -a | grep "upstream-sync-pr-" | head -1 | sed 's/^[* ]*//')
+            echo "pr_branch=$PR_BRANCH" >> $GITHUB_OUTPUT
+            echo "has_pr_branch=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_pr_branch=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Push auto-integrated changes
+        if: |
+          steps.check.outputs.has_changes == 'true' &&
+          steps.integrate.outputs.has_auto_commits == 'true' &&
+          github.event.inputs.dry_run != 'true'
+        run: |
+          git push origin main
+          echo "✅ Auto-integrated changes pushed to main"
+
+      - name: Create PR for manual review
+        if: |
+          steps.check.outputs.has_changes == 'true' &&
+          steps.integrate.outputs.has_pr_branch == 'true' &&
+          github.event.inputs.dry_run != 'true'
+        uses: actions/github-script@v7
+        env:
+          PR_BRANCH: ${{ steps.integrate.outputs.pr_branch }}
+        with:
+          script: |
+            const prBranch = process.env.PR_BRANCH;
+
+            // Push branch
+            await exec.exec('git', ['push', 'origin', prBranch]);
+
+            // Leer commit message para obtener detalles
+            const { stdout: commitMsg } = await exec.getExecOutput('git', [
+              'log', '-1', '--pretty=%B', prBranch
+            ]);
+
+            // Extraer lista de archivos del commit message
+            const files = commitMsg.match(/^- .+$/gm) || [];
+
+            // Crear PR
+            const pr = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🔄 Upstream Sync: Changes Requiring Review',
+              head: prBranch,
+              base: 'main',
+              body: `## 🔄 Automated Upstream Sync
+
+Esta PR contiene cambios del upstream que requieren revisión manual antes de integrar.
+
+### 📋 Archivos Incluidos
+
+${files.join('\n')}
+
+### ✅ Cambios ya Auto-Integrados
+
+Los cambios de bajo riesgo (reportes, documentación) ya fueron integrados directamente en main.
+
+### 🔒 Cambios Protegidos
+
+Los archivos críticos (install.sh, configs personalizados) NO fueron tocados y requieren revisión manual si es que cambiaron.
+
+### 🎯 Acción Recomendada
+
+1. Revisar los cambios en esta PR
+2. Verificar que no rompen el setup personalizado
+3. Mergear si son útiles, o cerrar la PR si no
+
+---
+
+🤖 Generated automatically by auto-integrate workflow
+
+Co-Authored-By: Claude <noreply@anthropic.com>`,
+              labels: ['upstream-sync', 'automated', 'needs-review']
+            });
+
+            console.log(`✅ PR creado: ${pr.data.html_url}`);
+            core.setOutput('pr_url', pr.data.html_url);
+            core.setOutput('pr_number', pr.data.number);
+
+      - name: Comment on original issue
+        if: steps.check.outputs.has_changes == 'true'
+        uses: actions/github-script@v7
+        continue-on-error: true
+        env:
+          HAS_AUTO_COMMITS: ${{ steps.integrate.outputs.has_auto_commits }}
+          HAS_PR: ${{ steps.integrate.outputs.has_pr_branch }}
+          COMMITS_BEHIND: ${{ steps.check.outputs.commits_behind }}
+        with:
+          script: |
+            // Buscar issue abierto más reciente con label upstream-sync
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'upstream-sync',
+              sort: 'created',
+              direction: 'desc',
+              per_page: 1
+            });
+
+            if (issues.data.length === 0) {
+              console.log('No se encontró issue abierto para comentar');
+              return;
+            }
+
+            const issue = issues.data[0];
+            const hasAutoCommits = process.env.HAS_AUTO_COMMITS === 'true';
+            const hasPR = process.env.HAS_PR === 'true';
+
+            let comment = `## 🤖 Integración Automática Completada\n\n`;
+
+            if (hasAutoCommits) {
+              comment += `### ✅ Cambios Auto-Integrados\n\n`;
+              comment += `Los cambios de **bajo riesgo** fueron integrados automáticamente en \`main\`:\n`;
+              comment += `- 📚 Reportes actualizados\n`;
+              comment += `- 🔧 Workflows de referencia\n`;
+              comment += `- 🎯 Definiciones de skills\n\n`;
+              comment += `Estos cambios ya están disponibles en la rama principal.\n\n`;
+            }
+
+            if (hasPR) {
+              comment += `### 🟡 PR Creada para Revisión\n\n`;
+              comment += `Los cambios de **riesgo medio** fueron colocados en una PR automática para tu revisión.\n\n`;
+              comment += `👉 Ver PR para aprobar o rechazar cambios\n\n`;
+            }
+
+            comment += `### 🔒 Cambios Protegidos\n\n`;
+            comment += `Los archivos críticos (tu setup personalizado) fueron **protegidos** y NO se tocaron:\n`;
+            comment += `- ❌ install.sh\n`;
+            comment += `- ❌ global-settings.json\n`;
+            comment += `- ❌ commands/rpi/*.md\n`;
+            comment += `- ❌ rules/*.md\n`;
+            comment += `- ❌ Otros archivos de configuración\n\n`;
+
+            comment += `Si estos archivos cambiaron en upstream y querés revisarlos, hacelo manualmente con:\n`;
+            comment += `\`\`\`bash\n`;
+            comment += `git diff HEAD..upstream/main -- archivo-protegido\n`;
+            comment += `\`\`\`\n\n`;
+
+            comment += `---\n`;
+            comment += `Cerrando este issue ya que la integración fue procesada automáticamente.\n\n`;
+            comment += `🤖 Automated by auto-integrate workflow`;
+
+            // Comentar
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              body: comment
+            });
+
+            // Cerrar issue
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              state: 'closed',
+              labels: ['upstream-sync', 'auto-integrated']
+            });
+
+            console.log(`✅ Issue #${issue.number} comentado y cerrado`);
+
+      - name: No changes detected
+        if: steps.check.outputs.has_changes == 'false'
+        run: |
+          echo "✅ No hay cambios nuevos en upstream"
+
+      - name: Dry run summary
+        if: github.event.inputs.dry_run == 'true'
+        run: |
+          echo "============================================"
+          echo "🔍 DRY RUN - No se realizaron cambios"
+          echo "============================================"
+          echo ""
+          echo "Los cambios fueron procesados pero NO se pushearon."
+          echo "Revisa los logs para ver qué se habría integrado."
+          cat /tmp/integration-log.txt || true
