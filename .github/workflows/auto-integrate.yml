@@ -108,6 +108,37 @@ jobs:
             // Extraer lista de archivos del commit message
             const files = commitMsg.match(/^- .+$/gm) || [];
 
+            // Crear body del PR
+            const prBody = [
+              '## 🔄 Automated Upstream Sync',
+              '',
+              'Esta PR contiene cambios del upstream que requieren revision manual antes de integrar.',
+              '',
+              '### 📋 Archivos Incluidos',
+              '',
+              files.join('\n'),
+              '',
+              '### ✅ Cambios ya Auto-Integrados',
+              '',
+              'Los cambios de bajo riesgo (reportes, documentacion) ya fueron integrados directamente en main.',
+              '',
+              '### 🔒 Cambios Protegidos',
+              '',
+              'Los archivos criticos (install.sh, configs personalizados) NO fueron tocados y requieren revision manual si es que cambiaron.',
+              '',
+              '### 🎯 Accion Recomendada',
+              '',
+              '1. Revisar los cambios en esta PR',
+              '2. Verificar que no rompen el setup personalizado',
+              '3. Mergear si son utiles, o cerrar la PR si no',
+              '',
+              '---',
+              '',
+              '🤖 Generated automatically by auto-integrate workflow',
+              '',
+              'Co-Authored-By: Claude <noreply@anthropic.com>'
+            ].join('\n');
+
             // Crear PR
             const pr = await github.rest.pulls.create({
               owner: context.repo.owner,
@@ -115,33 +146,7 @@ jobs:
               title: '🔄 Upstream Sync: Changes Requiring Review',
               head: prBranch,
               base: 'main',
-              body: `## 🔄 Automated Upstream Sync
-
-Esta PR contiene cambios del upstream que requieren revisión manual antes de integrar.
-
-### 📋 Archivos Incluidos
-
-${files.join('\n')}
-
-### ✅ Cambios ya Auto-Integrados
-
-Los cambios de bajo riesgo (reportes, documentación) ya fueron integrados directamente en main.
-
-### 🔒 Cambios Protegidos
-
-Los archivos críticos (install.sh, configs personalizados) NO fueron tocados y requieren revisión manual si es que cambiaron.
-
-### 🎯 Acción Recomendada
-
-1. Revisar los cambios en esta PR
-2. Verificar que no rompen el setup personalizado
-3. Mergear si son útiles, o cerrar la PR si no
-
----
-
-🤖 Generated automatically by auto-integrate workflow
-
-Co-Authored-By: Claude <noreply@anthropic.com>`,
+              body: prBody,
               labels: ['upstream-sync', 'automated', 'needs-review']
             });
 
@@ -179,39 +184,42 @@ Co-Authored-By: Claude <noreply@anthropic.com>`,
             const hasAutoCommits = process.env.HAS_AUTO_COMMITS === 'true';
             const hasPR = process.env.HAS_PR === 'true';
 
-            let comment = `## 🤖 Integración Automática Completada\n\n`;
+            // Construir comentario
+            const commentParts = ['## 🤖 Integracion Automatica Completada', ''];
 
             if (hasAutoCommits) {
-              comment += `### ✅ Cambios Auto-Integrados\n\n`;
-              comment += `Los cambios de **bajo riesgo** fueron integrados automáticamente en \`main\`:\n`;
-              comment += `- 📚 Reportes actualizados\n`;
-              comment += `- 🔧 Workflows de referencia\n`;
-              comment += `- 🎯 Definiciones de skills\n\n`;
-              comment += `Estos cambios ya están disponibles en la rama principal.\n\n`;
+              commentParts.push('### ✅ Cambios Auto-Integrados', '');
+              commentParts.push('Los cambios de **bajo riesgo** fueron integrados automaticamente en `main`:');
+              commentParts.push('- 📚 Reportes actualizados');
+              commentParts.push('- 🔧 Workflows de referencia');
+              commentParts.push('- 🎯 Definiciones de skills', '');
+              commentParts.push('Estos cambios ya estan disponibles en la rama principal.', '');
             }
 
             if (hasPR) {
-              comment += `### 🟡 PR Creada para Revisión\n\n`;
-              comment += `Los cambios de **riesgo medio** fueron colocados en una PR automática para tu revisión.\n\n`;
-              comment += `👉 Ver PR para aprobar o rechazar cambios\n\n`;
+              commentParts.push('### 🟡 PR Creada para Revision', '');
+              commentParts.push('Los cambios de **riesgo medio** fueron colocados en una PR automatica para tu revision.', '');
+              commentParts.push('👉 Ver PR para aprobar o rechazar cambios', '');
             }
 
-            comment += `### 🔒 Cambios Protegidos\n\n`;
-            comment += `Los archivos críticos (tu setup personalizado) fueron **protegidos** y NO se tocaron:\n`;
-            comment += `- ❌ install.sh\n`;
-            comment += `- ❌ global-settings.json\n`;
-            comment += `- ❌ commands/rpi/*.md\n`;
-            comment += `- ❌ rules/*.md\n`;
-            comment += `- ❌ Otros archivos de configuración\n\n`;
+            commentParts.push('### 🔒 Cambios Protegidos', '');
+            commentParts.push('Los archivos criticos (tu setup personalizado) fueron **protegidos** y NO se tocaron:');
+            commentParts.push('- ❌ install.sh');
+            commentParts.push('- ❌ global-settings.json');
+            commentParts.push('- ❌ commands/rpi/*.md');
+            commentParts.push('- ❌ rules/*.md');
+            commentParts.push('- ❌ Otros archivos de configuracion', '');
 
-            comment += `Si estos archivos cambiaron en upstream y querés revisarlos, hacelo manualmente con:\n`;
-            comment += `\`\`\`bash\n`;
-            comment += `git diff HEAD..upstream/main -- archivo-protegido\n`;
-            comment += `\`\`\`\n\n`;
+            commentParts.push('Si estos archivos cambiaron en upstream y queres revisarlos, hacelo manualmente con:');
+            commentParts.push('```bash');
+            commentParts.push('git diff HEAD..upstream/main -- archivo-protegido');
+            commentParts.push('```', '');
 
-            comment += `---\n`;
-            comment += `Cerrando este issue ya que la integración fue procesada automáticamente.\n\n`;
-            comment += `🤖 Automated by auto-integrate workflow`;
+            commentParts.push('---');
+            commentParts.push('Cerrando este issue ya que la integracion fue procesada automaticamente.', '');
+            commentParts.push('🤖 Automated by auto-integrate workflow');
+
+            const comment = commentParts.join('\n');
 
             // Comentar
             await github.rest.issues.createComment({
