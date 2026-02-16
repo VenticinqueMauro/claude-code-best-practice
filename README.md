@@ -92,9 +92,28 @@ echo ".claude/settings.local.json" >> .gitignore
 
 ## Mantener tu fork actualizado
 
-Este proyecto es un fork del repositorio original de shanraisshan. Para mantenerlo sincronizado con los últimos cambios:
+Este proyecto es un fork del repositorio original de shanraisshan. Tenés **3 formas** de sincronizar:
 
-### Opción 1: Script automatizado (Recomendado)
+### 🤖 Opción 1: Automatización con GitHub Actions (Recomendado)
+
+**Configuración de una sola vez:**
+
+El fork incluye un workflow de GitHub Actions que:
+- ✅ **Revisa cambios semanalmente** (cada lunes)
+- ✅ **Analiza y categoriza** por nivel de riesgo
+- ✅ **Crea issues automáticos** con reportes detallados
+- ✅ **Opción de auto-integración** para cambios seguros (reportes, docs)
+
+**No requiere acción - funciona automáticamente después del primer push** 🎉
+
+Lee [AUTOMATION.md](./AUTOMATION.md) para detalles completos.
+
+**Ejecución manual desde GitHub:**
+1. Andá a: `Actions` → `Sync Upstream Changes`
+2. Click en `Run workflow`
+3. Elegí `auto_integrate: true` para integrar cambios seguros automáticamente
+
+### 🔧 Opción 2: Script interactivo local
 
 ```bash
 ./sync-upstream.sh
@@ -105,7 +124,7 @@ El script te permitirá:
 - Elegir entre merge o rebase
 - Ver solo las diferencias sin aplicar cambios
 
-### Opción 2: Sincronización manual
+### ⚙️ Opción 3: Sincronización manual
 
 ```bash
 # 1. Fetch cambios del upstream

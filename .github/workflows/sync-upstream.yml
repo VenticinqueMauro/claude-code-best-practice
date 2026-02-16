@@ -1,0 +1,112 @@
+name: Sync Upstream Changes
+
+on:
+  schedule:
+    # Corre todos los lunes a las 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:  # Permite ejecución manual desde GitHub
+    inputs:
+      auto_integrate:
+        description: 'Auto-integrate safe changes (reports, docs)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+jobs:
+  check-upstream:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add upstream remote
+        run: |
+          git remote add upstream https://github.com/shanraisshan/claude-code-best-practice.git || true
+          git fetch upstream
+
+      - name: Check for changes
+        id: check
+        run: |
+          COMMITS_BEHIND=$(git rev-list --count HEAD..upstream/main)
+          echo "commits_behind=$COMMITS_BEHIND" >> $GITHUB_OUTPUT
+
+          if [ "$COMMITS_BEHIND" -eq 0 ]; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Analyze changes
+        if: steps.check.outputs.has_changes == 'true'
+        id: analyze
+        run: |
+          bash scripts/analyze-upstream-changes.sh > /tmp/analysis.md
+          echo "analysis_file=/tmp/analysis.md" >> $GITHUB_OUTPUT
+
+      - name: Auto-integrate safe changes
+        if: |
+          steps.check.outputs.has_changes == 'true' &&
+          github.event.inputs.auto_integrate == 'true'
+        run: |
+          # Integrar solo reportes y documentación (cambios seguros)
+          git checkout upstream/main -- reports/ || true
+          git checkout upstream/main -- workflow/rpi/ || true
+
+          if git diff --staged --quiet; then
+            echo "No safe changes to integrate"
+          else
+            git commit -m "chore: auto-integrate safe upstream changes
+
+          - Updated reports/ documentation
+          - Updated workflow/rpi/ examples
+
+          Automated integration via GitHub Actions
+
+          🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+          Co-Authored-By: Claude <noreply@anthropic.com>"
+
+            git push origin master
+          fi
+
+      - name: Create issue for manual review
+        if: |
+          steps.check.outputs.has_changes == 'true' &&
+          github.event.inputs.auto_integrate != 'true'
+        uses: actions/github-script@v7
+        env:
+          COMMITS_BEHIND: ${{ steps.check.outputs.commits_behind }}
+        with:
+          script: |
+            const fs = require('fs');
+            const analysis = fs.readFileSync('/tmp/analysis.md', 'utf8');
+
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🔄 Upstream tiene ${process.env.COMMITS_BEHIND} commits nuevos`,
+              labels: ['upstream-sync', 'needs-review'],
+              body: analysis
+            });
+
+            console.log(`Issue creado: ${issue.data.html_url}`);
+
+      - name: No changes detected
+        if: steps.check.outputs.has_changes == 'false'
+        run: |
+          echo "✅ No hay cambios nuevos en upstream"
