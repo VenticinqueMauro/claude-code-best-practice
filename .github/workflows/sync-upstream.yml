@@ -89,6 +89,7 @@ jobs:
           steps.check.outputs.has_changes == 'true' &&
           github.event.inputs.auto_integrate != 'true'
         uses: actions/github-script@v7
+        continue-on-error: true
         env:
           COMMITS_BEHIND: ${{ steps.check.outputs.commits_behind }}
         with:
@@ -96,15 +97,44 @@ jobs:
             const fs = require('fs');
             const analysis = fs.readFileSync('/tmp/analysis.md', 'utf8');
 
-            const issue = await github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: `🔄 Upstream tiene ${process.env.COMMITS_BEHIND} commits nuevos`,
-              labels: ['upstream-sync', 'needs-review'],
-              body: analysis
-            });
+            try {
+              const issue = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `🔄 Upstream tiene ${process.env.COMMITS_BEHIND} commits nuevos`,
+                labels: ['upstream-sync', 'needs-review'],
+                body: analysis
+              });
 
-            console.log(`Issue creado: ${issue.data.html_url}`);
+              console.log(`✅ Issue creado: ${issue.data.html_url}`);
+            } catch (error) {
+              if (error.message.includes('Issues has been disabled')) {
+                console.log('⚠️ No se pudo crear el issue: Issues está deshabilitado en este repositorio.');
+                console.log('📖 Para habilitar Issues:');
+                console.log('   1. Andá a: Settings → Features');
+                console.log('   2. Marcá la checkbox "Issues"');
+                console.log('');
+                console.log('📊 Resumen de cambios detectados:');
+                console.log(`   - Commits nuevos: ${process.env.COMMITS_BEHIND}`);
+                console.log('');
+                console.log('📄 Análisis completo disponible en los logs del step "Analyze changes"');
+              } else {
+                throw error;
+              }
+            }
+
+      - name: Show analysis in logs (if issue creation failed)
+        if: |
+          steps.check.outputs.has_changes == 'true' &&
+          github.event.inputs.auto_integrate != 'true'
+        run: |
+          echo "============================================"
+          echo "📊 ANÁLISIS DE CAMBIOS DEL UPSTREAM"
+          echo "============================================"
+          echo ""
+          cat /tmp/analysis.md || echo "Análisis no disponible"
+          echo ""
+          echo "============================================"
 
       - name: No changes detected
         if: steps.check.outputs.has_changes == 'false'

@@ -281,6 +281,17 @@ git diff HEAD..upstream/main -- workflow/
 
 ## 🆘 Troubleshooting
 
+### Issues deshabilitado (Error común en forks)
+
+**Problema**: `HttpError: Issues has been disabled in this repository`
+
+**Solución**:
+1. Andá a: Settings → Features
+2. Marcá la checkbox ✅ "Issues"
+3. Re-run el workflow que falló
+
+**Nota**: Los forks en GitHub suelen venir con Issues deshabilitado por defecto. El workflow ahora maneja este error gracefully y muestra el análisis en los logs si no puede crear el issue.
+
 ### El workflow no corre
 
 **Problema**: No ves ejecuciones en Actions

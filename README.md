@@ -106,6 +106,8 @@ El fork incluye un workflow de GitHub Actions que:
 
 **No requiere acción - funciona automáticamente después del primer push** 🎉
 
+**⚠️ Importante para forks**: Habilitar Issues en Settings → Features para recibir notificaciones automáticas.
+
 Lee [AUTOMATION.md](./AUTOMATION.md) para detalles completos.
 
 **Ejecución manual desde GitHub:**
