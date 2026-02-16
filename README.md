@@ -1,7 +1,8 @@
-# 🛠️ Claude Code - Setup Optimizado para Mauro
+# 🛠️ Claude Code - Setup Optimizado
 
-> Guía completa de Ingeniería de Contexto basada en el análisis de
-> [shanraisshan/claude-code-best-practice](https://github.com/shanraisshan/claude-code-best-practice)
+> Fork personalizado de [shanraisshan/claude-code-best-practice](https://github.com/shanraisshan/claude-code-best-practice) con instalador automatizado, configuración en español y mejoras adicionales.
+
+[![Fork Status](https://img.shields.io/badge/fork-upstream%20synced-green)](https://github.com/shanraisshan/claude-code-best-practice)
 
 ## Estructura de archivos a crear
 
@@ -49,4 +50,48 @@ cp rules/*.md .claude/rules/
 
 # 3. Agregar a .gitignore
 echo ".claude/settings.local.json" >> .gitignore
+```
+
+---
+
+## Mantener tu fork actualizado
+
+Este proyecto es un fork del repositorio original de shanraisshan. Para mantenerlo sincronizado con los últimos cambios:
+
+### Opción 1: Script automatizado (Recomendado)
+
+```bash
+./sync-upstream.sh
+```
+
+El script te permitirá:
+- Ver los cambios disponibles desde upstream
+- Elegir entre merge o rebase
+- Ver solo las diferencias sin aplicar cambios
+
+### Opción 2: Sincronización manual
+
+```bash
+# 1. Fetch cambios del upstream
+git fetch upstream
+
+# 2. Ver qué cambios hay
+git log --oneline HEAD..upstream/main
+
+# 3. Merge o rebase según prefieras
+git merge upstream/main
+# o
+git rebase upstream/main
+
+# 4. Push a tu fork
+git push origin master
+```
+
+### ¿Cuándo sincronizar?
+
+- Antes de comenzar un proyecto nuevo
+- Cada 2-4 semanas si el upstream está activo
+- Cuando veas features interesantes en el repo original
+
+**Nota**: Este fork agrega mejoras específicas que no están en el upstream (instalador, español, scripts), así que algunas configuraciones pueden divergir intencionalmente.
 ```
