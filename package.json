@@ -1,0 +1,51 @@
+{
+  "name": "@mauro25qe/claude-code-setup",
+  "version": "1.0.0",
+  "description": "Automated setup for Claude Code with Spanish config, RPI workflow, and auto-sync from upstream",
+  "main": "lib/installer.js",
+  "type": "module",
+  "bin": {
+    "claude-setup": "./bin/cli.js",
+    "claude-code-setup": "./bin/cli.js"
+  },
+  "scripts": {
+    "test": "node bin/cli.js --dry-run",
+    "test:project": "node bin/cli.js --project --dry-run"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "cli",
+    "setup",
+    "automation",
+    "ai",
+    "assistant",
+    "rpi",
+    "workflow"
+  ],
+  "author": "VenticinqueMauro",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/VenticinqueMauro/claude-code-best-practice.git"
+  },
+  "bugs": {
+    "url": "https://github.com/VenticinqueMauro/claude-code-best-practice/issues"
+  },
+  "homepage": "https://github.com/VenticinqueMauro/claude-code-best-practice#readme",
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "inquirer": "^9.2.23",
+    "ora": "^8.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "bin/",
+    "lib/",
+    "templates/",
+    "README.md",
+    "LICENSE"
+  ]
+}

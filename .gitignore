@@ -1,6 +1,9 @@
 # Local settings personales
 .claude/settings.local.json
 
+# Node modules
+node_modules
+
 # System files
 .DS_Store
 Thumbs.db

@@ -1,0 +1,50 @@
+# Development files
+.git/
+.github/workflows/sync-upstream.yml
+.github/workflows/auto-integrate.yml
+node_modules/
+
+# Original installation scripts (keep for reference but not in npm package)
+install.sh
+sync-upstream.sh
+
+# Scripts only for GitHub Actions
+scripts/analyze-upstream-changes.sh
+scripts/smart-integrate.sh
+
+# Config for auto-integration (not needed for npm users)
+config/
+
+# Documentation files (large, not needed in npm package)
+reports/
+workflow/
+presentation/
+weather-orchestration/
+.claude/skills/
+
+# Reference files
+AUTOMATION.md
+AUTO-INTEGRATION.md
+INTEGRATION-NOTES.md
+CLAUDE-upstream-reference.md
+
+# Original template files (duplicated in templates/)
+global-settings.json
+project-settings.json
+project-CLAUDE.md
+commands/
+rules/
+
+# Test and dev files
+*.log
+.DS_Store
+Thumbs.db
+.env*
+
+# Keep only what's needed for npm package:
+# - bin/
+# - lib/
+# - templates/
+# - package.json
+# - README.md
+# - LICENSE

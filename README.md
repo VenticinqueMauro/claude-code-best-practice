@@ -67,25 +67,50 @@ TU_PROYECTO/
 
 ---
 
-## Instrucciones de instalación rápida
+## 🚀 Instalación Rápida (Recomendado: NPM)
 
-Ejecutar en terminal:
+### Método 1: NPM Package (Sin clonar el repo) ⭐
+
+**Primera instalación (config global + proyecto):**
+```bash
+# En tu proyecto existente
+cd tu-proyecto
+npx @mauro25qe/claude-code-setup
+```
+
+**Solo instalación global:**
+```bash
+npx @mauro25qe/claude-code-setup --global-only
+```
+
+**Solo setup de proyecto (si ya configuraste global):**
+```bash
+cd tu-proyecto
+npx @mauro25qe/claude-code-setup --project
+```
+
+**Modo interactivo completo:**
+```bash
+npx @mauro25qe/claude-code-setup
+# Te preguntará qué instalar y dónde
+```
+
+**Ver ayuda:**
+```bash
+npx @mauro25qe/claude-code-setup --help
+```
+
+### Método 2: Script Bash (Clonar repo)
+
+Si preferís clonar el repositorio y usar el script bash:
 
 ```bash
-# 1. Config global
-mkdir -p ~/.claude
-cp global-settings.json ~/.claude/settings.json
+# 1. Clonar
+git clone https://github.com/VenticinqueMauro/claude-code-best-practice.git
+cd claude-code-best-practice
 
-# 2. Para CADA proyecto nuevo:
-cd tu-proyecto
-mkdir -p .claude/commands/rpi .claude/rules rpi/plans
-cp project-CLAUDE.md ./CLAUDE.md
-cp project-settings.json .claude/settings.json
-cp commands/rpi/*.md .claude/commands/rpi/
-cp rules/*.md .claude/rules/
-
-# 3. Agregar a .gitignore
-echo ".claude/settings.local.json" >> .gitignore
+# 2. Ejecutar instalador
+./install.sh
 ```
 
 ---
