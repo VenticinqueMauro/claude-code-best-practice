@@ -1,153 +1,118 @@
 # CLAUDE.md
 
-> Context guide for Claude Code in this project.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project
+## Repository Overview
 
-- **Name**: @mauro25qe/claude-code-setup
-- **Description**: CLI tool to configure Claude Code with best practices, auto-detection, templates, and plugin support
-- **Repo**: https://github.com/VenticinqueMauro/claude-code-best-practice
+This is a best practices repository for Claude Code configuration, demonstrating patterns for skills, subagents, hooks, and commands. It serves as a reference implementation rather than an application codebase.
 
-## Stack
+## Key Components
 
-- **Type**: Node.js CLI Tool
-- **Language**: JavaScript (ES Modules)
-- **Package Manager**: npm
-- **Publish**: npmjs.com
+### Weather System (Example Workflow)
+A demonstration of the **Command → Agent → Skills** architecture pattern:
+- `/weather-orchestrator` command (`.claude/commands/weather-orchestrator.md`): Entry point that invokes the weather agent
+- `weather` agent (`.claude/agents/weather.md`): Executes workflow using preloaded skills
+- `weather-fetcher` skill (`.claude/skills/weather-fetcher/SKILL.md`): Instructions for fetching temperature from wttr.in API
+- `weather-transformer` skill (`.claude/skills/weather-transformer/SKILL.md`): Instructions for applying transformation rules from `weather-orchestration/input.md`, writes results to `weather-orchestration/output.md`
 
-## Main Commands
+The agent has skills preloaded via the `skills` field, providing domain knowledge for sequential execution. See `weather-orchestration/weather-orchestration-architecture.md` for the complete flow diagram.
 
-```bash
-# Development / Testing
-node bin/cli.js --help              # Show help
-node bin/cli.js --dry-run           # Test without changes
-node bin/cli.js --dry-run --yes     # Full auto flow test
+### Skill Definition Structure
+Skills in `.claude/skills/<name>/SKILL.md` use YAML frontmatter:
+- `name`: Display name and `/slash-command` (defaults to directory name)
+- `description`: When to invoke (recommended for auto-discovery)
+- `argument-hint`: Autocomplete hint (e.g., `[issue-number]`)
+- `disable-model-invocation`: Set `true` to prevent automatic invocation
+- `user-invocable`: Set `false` to hide from `/` menu (background knowledge only)
+- `allowed-tools`: Tools allowed without permission prompts when skill is active
+- `model`: Model to use when skill is active
+- `context`: Set to `fork` to run in isolated subagent context
+- `agent`: Subagent type for `context: fork` (default: `general-purpose`)
+- `hooks`: Lifecycle hooks scoped to this skill
 
-# Publishing
-npm version patch                   # Bump version
-npm publish --access public         # Publish to npm
+### Presentation System
+Any request to update, modify, or fix the presentation (`presentation/index.html`) must be handled by the `presentation-curator` agent (`.claude/agents/presentation-curator.md`). Always delegate presentation work to this agent via the Task tool — never edit the presentation directly.
+
+The agent is **self-evolving**: after every execution, it updates its own skills to stay in sync with the presentation. It has three preloaded skills:
+- `vibe-to-agentic-framework`: The conceptual framework ("Vibe Coding → Agentic Engineering"), weight rationale, and journey narrative. Updated after every slide change.
+- `presentation-structure`: Slide format, weight system, navigation, section ranges. Updated when slides are added/removed/reordered.
+- `presentation-styling`: CSS classes, component patterns, syntax highlighting. Updated when new styling patterns are introduced.
+
+### Hooks System
+Cross-platform sound notification system in `.claude/hooks/`:
+- `scripts/hooks.py`: Main handler for Claude Code hook events
+- `config/hooks-config.json`: Shared team configuration
+- `config/hooks-config.local.json`: Personal overrides (git-ignored)
+- `sounds/`: Audio files organized by hook event (generated via ElevenLabs TTS)
+
+Hook events configured in `.claude/settings.json`: PreToolUse, PostToolUse, UserPromptSubmit, Notification, Stop, SubagentStart, SubagentStop, PreCompact, SessionStart, SessionEnd, Setup, PermissionRequest, TeammateIdle, TaskCompleted, ConfigChange.
+
+Special handling: git commits trigger `pretooluse-git-committing` sound.
+
+## Critical Patterns
+
+### Subagent Orchestration
+Subagents **cannot** invoke other subagents via bash commands. Use the Task tool:
+```
+Task(subagent_type="agent-name", description="...", prompt="...", model="haiku")
 ```
 
-## Project Structure
+Be explicit about tool usage in subagent definitions. Avoid vague terms like "launch" that could be misinterpreted as bash commands.
 
-```
-bin/
-├── cli.js                # CLI entry point, argument parsing
+### Subagent Definition Structure
+Subagents in `.claude/agents/*.md` use YAML frontmatter:
+- `name`: Subagent identifier
+- `description`: When to invoke (use "PROACTIVELY" for auto-invocation)
+- `tools`: Comma-separated allowlist of tools (inherits all if omitted). Supports `Task(agent_type)` syntax
+- `disallowedTools`: Tools to deny, removed from inherited or specified list
+- `model`: Model alias: `haiku`, `sonnet`, `opus`, or `inherit` (default: `inherit`)
+- `permissionMode`: Permission mode (e.g., `"acceptEdits"`, `"plan"`, `"bypassPermissions"`)
+- `maxTurns`: Maximum agentic turns before the subagent stops
+- `skills`: List of skill names to preload into agent context
+- `mcpServers`: MCP servers for this subagent (server names or inline configs)
+- `hooks`: Lifecycle hooks scoped to this subagent (`PreToolUse`, `PostToolUse`, `Stop`)
+- `memory`: Persistent memory scope — `user`, `project`, or `local` (see `reports/claude-agent-memory.md`)
+- `background`: Set to `true` to always run as a background task
+- `isolation`: Set to `"worktree"` to run in a temporary git worktree
+- `color`: CLI output color for visual distinction
 
-lib/
-├── installer.js          # Main installer flow (7 steps)
-├── detector.js           # Auto-detection of project stack
-├── templates.js          # CLAUDE.md template processing
-├── wizard.js             # Interactive configuration wizard
-├── plugins.js            # Official plugin integration
-├── prompts.js            # Inquirer.js prompts
-├── utils.js              # Helper functions
+### Configuration Hierarchy
+1. `.claude/settings.local.json`: Personal settings (git-ignored)
+2. `.claude/settings.json`: Team-shared settings
+3. `hooks-config.local.json` overrides `hooks-config.json`
 
-templates/
-├── global-settings.json      # ~/.claude/settings.json template
-├── project-settings.json     # .claude/settings.json template
-├── project-CLAUDE.md         # Fallback CLAUDE.md
-├── commands/rpi/             # RPI workflow commands
-├── rules/                    # Code rules (5 files)
-└── claude-md/                # Stack-specific templates
-    ├── nextjs.md
-    ├── express.md
-    ├── react.md
-    ├── python.md
-    └── minimal.md
-```
+### Disable Hooks
+Set `"disableAllHooks": true` in `.claude/settings.local.json`, or disable individual hooks in `hooks-config.json`.
 
-## Code Conventions
+## Workflow Best Practices
 
-- ES Modules (`import`/`export`), no CommonJS
-- Async/await for all async operations
-- Functions should be pure when possible
-- Use chalk for colored output, ora for spinners
-- inquirer.js for interactive prompts
+From experience with this repository:
 
-## Key Files
+- Keep CLAUDE.md under 150 lines for reliable adherence
+- Use commands for workflows instead of standalone agents
+- Create feature-specific subagents with skills (progressive disclosure) rather than general-purpose agents
+- Perform manual `/compact` at ~50% context usage
+- Start with plan mode for complex tasks
+- Use human-gated todo list workflow for multi-step tasks
+- Break subtasks small enough to complete in under 50% context
 
-| File | Purpose |
-|------|---------|
-| `bin/cli.js` | CLI entry point, parses arguments |
-| `lib/installer.js` | Main 7-step installation flow |
-| `lib/detector.js` | Detects framework, TS, package manager, etc. |
-| `lib/templates.js` | Processes CLAUDE.md templates with placeholders |
-| `lib/wizard.js` | Quick/Full/Expert configuration modes |
-| `lib/plugins.js` | Official plugin installation |
-| `package.json` | Package config, version, dependencies |
+### Debugging Tips
 
-## Critical Rules
+- Use `/doctor` for diagnostics
+- Run long-running terminal commands as background tasks for better log visibility
+- Use browser automation MCPs (Claude in Chrome, Playwright, Chrome DevTools) for Claude to inspect console logs
+- Provide screenshots when reporting visual issues
 
-1. NEVER break backward compatibility with existing CLI flags
-2. ALWAYS test with `--dry-run` before publishing
-3. ALWAYS verify syntax with `node --check <file>` for new modules
-4. Keep approved plugins list curated (5k+ downloads, official only)
-5. Templates must work with minimal data (graceful fallbacks)
+## Documentation
 
-## Architecture
+- `docs/AGENTS.md`: Subagent orchestration troubleshooting
+- `weather-orchestration/weather-orchestration-architecture.md`: Weather system flow diagram
+- `docs/COMPARISION.md`: Commands vs Agents vs Skills invocation patterns
 
-```
-User runs CLI
-      ↓
-bin/cli.js (parse args)
-      ↓
-lib/installer.js (orchestrates flow)
-      ↓
-  ┌───┴───┬───────┬─────────┬──────────┐
-  ↓       ↓       ↓         ↓          ↓
-detector templates wizard prompts  plugins
-```
+## Reports
 
-## 7-Step Installation Flow
-
-1. **Detect Stack** - Analyze package.json, lock files, tsconfig
-2. **Select Mode** - Quick / Full / Expert
-3. **Choose Template** - Recommended based on detection
-4. **Configure CLAUDE.md** - Interactive questions
-5. **Select Plugins** - Official only (5k+ downloads)
-6. **Install** - Copy files, process templates
-7. **Summary** - Personalized next steps
-
-## RPI Workflow
-
-For new features, use the Research → Plan → Implement flow:
-1. `/rpi:research` - Analyze feasibility before coding
-2. `/rpi:plan` - Break down into micro-tasks
-3. `/rpi:implement` - Execute task by task with atomic commits
-
-Plans are saved in `rpi/{feature-slug}/`.
-
----
-
-## Memory
-
-{This section updates between sessions. Claude should read this at startup.}
-
-### Last Session
-- **Date**: 2026-02-17
-- **Feature in progress**: UX Improvement System
-- **Status**: Complete - ready to publish
-- **Next step**: Commit and push to GitHub + npm
-
-### Recent Technical Decisions
-- Implemented 4 major features: auto-detection, wizard, plugins, templates
-- Created 5 CLAUDE.md templates (nextjs, express, react, python, minimal)
-- Used dogfooding - installed our own tool on this project
-
-### Known Issues
-- None
-
----
-
-## Skills
-
-### Business Domain
-- Claude Code CLI tool ecosystem
-- Developer experience (DX) for AI-assisted coding
-- Project scaffolding and configuration management
-
-### Custom Patterns
-- Template placeholders: `{{variableName}}` replaced at runtime
-- Detection confidence scoring (0-100%)
-- Graceful fallbacks when detection fails
+- `reports/claude-in-chrome-v-chrome-devtools-mcp.md`: Browser automation MCP comparison (Playwright vs Chrome DevTools vs Claude in Chrome)
+- `reports/claude-md-for-larger-mono-repos.md`: CLAUDE.md loading behavior in monorepos (ancestor vs descendant loading)
+- `reports/claude-skills-for-larger-mono-repos.md`: Skills discovery and loading behavior in monorepos (static vs dynamic discovery)
+- `reports/claude-agent-memory.md`: Agent memory frontmatter — persistent memory scopes (user, project, local) for subagents
+- `reports/claude-advanced-tool-use.md`: Advanced tool use patterns — Programmatic Tool Calling (PTC), Tool Search, Tool Use Examples

@@ -7,7 +7,7 @@
 </tr>
 </table>
 
-![SDK vs CLI System Prompts Diagram](../!/sdk-vs-cli-diagram.svg)
+![SDK vs CLI System Prompts Diagram](assets/sdk-vs-cli-diagram.svg)
 
 ---
 
