@@ -9,13 +9,13 @@ This is a best practices repository for Claude Code configuration, demonstrating
 ## Key Components
 
 ### Weather System (Example Workflow)
-A demonstration of the **Command → Agent → Skills** architecture pattern:
-- `/weather-orchestrator` command (`.claude/commands/weather-orchestrator.md`): Entry point that invokes the weather agent
-- `weather` agent (`.claude/agents/weather.md`): Executes workflow using preloaded skills
-- `weather-fetcher` skill (`.claude/skills/weather-fetcher/SKILL.md`): Instructions for fetching temperature from wttr.in API
-- `weather-transformer` skill (`.claude/skills/weather-transformer/SKILL.md`): Instructions for applying transformation rules from `weather-orchestration/input.md`, writes results to `weather-orchestration/output.md`
+A demonstration of two distinct skill patterns via the **Command → Agent → Skill** architecture:
+- `/weather-orchestrator` command (`.claude/commands/weather-orchestrator.md`): Entry point — asks user for C/F, invokes agent, then invokes SVG skill
+- `weather-agent` agent (`.claude/agents/weather-agent.md`): Fetches temperature using its preloaded `weather-fetcher` skill (agent skill pattern)
+- `weather-fetcher` skill (`.claude/skills/weather-fetcher/SKILL.md`): Preloaded into agent — instructions for fetching temperature from wttr.in API
+- `weather-svg-creator` skill (`.claude/skills/weather-svg-creator/SKILL.md`): Skill — creates SVG weather card, writes `orchestration-workflow/weather.svg` and `orchestration-workflow/output.md`
 
-The agent has skills preloaded via the `skills` field, providing domain knowledge for sequential execution. See `weather-orchestration/weather-orchestration-architecture.md` for the complete flow diagram.
+Two skill patterns: agent skills (preloaded via `skills:` field) vs skills (invoked via `Skill` tool). See `orchestration-workflow/orchestration-workflow.md` for the complete flow diagram.
 
 ### Skill Definition Structure
 Skills in `.claude/skills/<name>/SKILL.md` use YAML frontmatter:
@@ -106,7 +106,7 @@ From experience with this repository:
 ## Documentation
 
 - `docs/AGENTS.md`: Subagent orchestration troubleshooting
-- `weather-orchestration/weather-orchestration-architecture.md`: Weather system flow diagram
+- `orchestration-workflow/orchestration-workflow.md`: Weather system flow diagram
 - `docs/COMPARISION.md`: Commands vs Agents vs Skills invocation patterns
 
 ## Reports
@@ -116,3 +116,4 @@ From experience with this repository:
 - `reports/claude-skills-for-larger-mono-repos.md`: Skills discovery and loading behavior in monorepos (static vs dynamic discovery)
 - `reports/claude-agent-memory.md`: Agent memory frontmatter — persistent memory scopes (user, project, local) for subagents
 - `reports/claude-advanced-tool-use.md`: Advanced tool use patterns — Programmatic Tool Calling (PTC), Tool Search, Tool Use Examples
+- `reports/claude-usage-and-rate-limits.md`: Usage commands (`/usage`, `/extra-usage`, `/cost`), rate limits, and pay-as-you-go overflow billing
